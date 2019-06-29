@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -25,6 +26,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import app.com.CATE.TwitchActivity;
 import app.com.CATE.adapters.VideoPostAdapter;
 import app.com.CATE.DetailsActivity;
 import app.com.CATE.MainActivity;
@@ -44,7 +46,7 @@ public class PlayListFragment extends Fragment {
     private RecyclerView mList_videos = null;
     private VideoPostAdapter adapter = null;
     private ArrayList<YoutubeDataModel> mListData = new ArrayList<>();
-    String cateName, cateDetail, video_id;
+    String cateName, cateDetail, video_id, video_kind;
 
 
     public MainActivity mainActivity;
@@ -76,15 +78,26 @@ public class PlayListFragment extends Fragment {
                 JSONObject object = jsonArray.getJSONObject(count);
 
                 YoutubeDataModel youtubeObject = new YoutubeDataModel();
-
+                String thumbnail = "";
 
                 cateName = object.getString("title");
+                video_kind = object.getString("kind");
                 cateDetail = object.getString("url");
-                video_id = cateDetail.substring(cateDetail.indexOf("=") + 1);
-                String thumbnail = "https://i.ytimg.com/vi/" + video_id + "/hqdefault.jpg";
+
+                if(video_kind.equals("YOUTUBE")) {
+                    video_id = cateDetail.substring(cateDetail.indexOf("=") + 1);
+                    thumbnail = "https://i.ytimg.com/vi/" + video_id + "/hqdefault.jpg";
+                }
+                if(video_kind.equals("TWITCH")) {
+                    String[] split = cateDetail.split("/");
+                    video_id = split[4];
+                    thumbnail = "https://static-cdn.jtvnw.net/jtv_user_pictures/twitch-profile_image-8a8c5be2e3b64a9a-300x300.png";
+                }
+
                 youtubeObject.setTitle(cateName);
                 youtubeObject.setThumbnail(thumbnail);
                 youtubeObject.setVideo_id(video_id);
+                youtubeObject.setVideo_kind(video_kind);
 
                 count++;
                 mListData.add(youtubeObject);
@@ -107,9 +120,16 @@ public class PlayListFragment extends Fragment {
             @Override
             public void onItemClick(YoutubeDataModel item) {
                 YoutubeDataModel youtubeDataModel = item;
-                Intent intent = new Intent(getActivity(), DetailsActivity.class);
-                intent.putExtra(YoutubeDataModel.class.toString(), youtubeDataModel);
-                startActivity(intent);
+                if(youtubeDataModel.getVideo_kind().equals("YOUTUBE")) {                                //유튜브 플레이어
+                    Intent intent = new Intent(getActivity(), DetailsActivity.class);
+                    intent.putExtra(YoutubeDataModel.class.toString(), youtubeDataModel);
+                    startActivity(intent);
+                }
+                if(youtubeDataModel.getVideo_kind().equals("TWITCH")) {
+                    Intent intent = new Intent(getActivity(), TwitchActivity.class);                   //트위치 플레이어
+                    intent.putExtra(YoutubeDataModel.class.toString(), youtubeDataModel);
+                    startActivity(intent);
+                }
             }
         });
         mList_videos.setAdapter(adapter);

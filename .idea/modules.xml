@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/CATE.iml" filepath="$PROJECT_DIR$/CATE.iml" />
+      <module fileurl="file://$PROJECT_DIR$/CATE-FINAL.iml" filepath="$PROJECT_DIR$/CATE-FINAL.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

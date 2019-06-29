@@ -22,6 +22,7 @@
         <activity android:name="app.com.CATE.DetailsActivity" />
         <activity android:name="app.com.CATE.SignupPage" />
         <activity android:name="app.com.CATE.MainActivity" />
+        <activity android:name="app.com.CATE.TwitchActivity" />
 
     </application>
 
