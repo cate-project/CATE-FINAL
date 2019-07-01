@@ -4,6 +4,7 @@ package app.com.CATE.fragments;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -46,8 +47,9 @@ public class PlayListFragment extends Fragment {
     private RecyclerView mList_videos = null;
     private VideoPostAdapter adapter = null;
     private ArrayList<YoutubeDataModel> mListData = new ArrayList<>();
+    private ArrayList<YoutubeDataModel> nListData = new ArrayList<>();
     String cateName, cateDetail, video_id, video_kind;
-
+    int requestNum = 0;
 
     public MainActivity mainActivity;
 
@@ -63,52 +65,15 @@ public class PlayListFragment extends Fragment {
         mainActivity = (MainActivity) getActivity();
         PLAYLIST_GET_URL = mainActivity.PLAYLIST_GET_URL;
         mList_videos = (RecyclerView) view.findViewById(R.id.mList_videos);
-        initList(mListData);
+        mListData = mainActivity.listData;
+        initList(nListData);
 
-        try {
-            //intent로 값을 가져옵니다 이때 JSONObject타입으로 가져옵니다
-            JSONObject jsonObject = new JSONObject(mainActivity.channel);
-
-            //List.php 웹페이지에서 response라는 변수명으로 JSON 배열을 만들었음..
-            JSONArray jsonArray = jsonObject.getJSONArray("response");
-            int count = 0;
-
-            while (count < jsonArray.length()) {
-
-                JSONObject object = jsonArray.getJSONObject(count);
-
-                YoutubeDataModel youtubeObject = new YoutubeDataModel();
-                String thumbnail = "";
-
-                cateName = object.getString("title");
-                video_kind = object.getString("kind");
-                cateDetail = object.getString("url");
-
-                if(video_kind.equals("YOUTUBE")) {
-                    video_id = cateDetail.substring(cateDetail.indexOf("=") + 1);
-                    thumbnail = "https://i.ytimg.com/vi/" + video_id + "/hqdefault.jpg";
-                }
-                if(video_kind.equals("TWITCH")) {
-                    String[] split = cateDetail.split("/");
-                    video_id = split[4];
-                    thumbnail = "https://static-cdn.jtvnw.net/jtv_user_pictures/twitch-profile_image-8a8c5be2e3b64a9a-300x300.png";
-                }
-
-                youtubeObject.setTitle(cateName);
-                youtubeObject.setThumbnail(thumbnail);
-                youtubeObject.setVideo_id(video_id);
-                youtubeObject.setVideo_kind(video_kind);
-
-                count++;
-                mListData.add(youtubeObject);
-
+        if (!mListData.isEmpty()) {
+            for (int i = 0; i < mListData.size(); i++) {
+                new RequestVideoThumbnail(i).execute();
             }
-        } catch (
-                Exception e) {
-            e.printStackTrace();
         }
 
-        //new RequestVideoThumbnail().execute();
         //new RequestYoutubeAPI().execute();
         return view;
     }
@@ -120,12 +85,12 @@ public class PlayListFragment extends Fragment {
             @Override
             public void onItemClick(YoutubeDataModel item) {
                 YoutubeDataModel youtubeDataModel = item;
-                if(youtubeDataModel.getVideo_kind().equals("YOUTUBE")) {                                //유튜브 플레이어
+                if (youtubeDataModel.getVideo_kind().equals("YOUTUBE")) {                                //유튜브 플레이어
                     Intent intent = new Intent(getActivity(), DetailsActivity.class);
                     intent.putExtra(YoutubeDataModel.class.toString(), youtubeDataModel);
                     startActivity(intent);
                 }
-                if(youtubeDataModel.getVideo_kind().equals("TWITCH")) {
+                if (youtubeDataModel.getVideo_kind().equals("TWITCH")) {
                     Intent intent = new Intent(getActivity(), TwitchActivity.class);                   //트위치 플레이어
                     intent.putExtra(YoutubeDataModel.class.toString(), youtubeDataModel);
                     startActivity(intent);
@@ -138,7 +103,13 @@ public class PlayListFragment extends Fragment {
 
 
     //동영상 썸네일 주소 받아오기
-    private class RequestVideoThumbnail extends AsyncTask<Void, String, String> {
+    class RequestVideoThumbnail extends AsyncTask<Void, String, String> {
+        int num;
+
+        RequestVideoThumbnail(int num){
+            this.num = num;
+        }
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -147,17 +118,20 @@ public class PlayListFragment extends Fragment {
         @Override
         protected String doInBackground(Void... params) {
             //String THUMBNAIL_GET_URL = "https://www.googleapis.com/youtube/v3/videos?key=" + GOOGLE_YOUTUBE_API_KEY + "&part=snippet&id=" + video_id;
-            String THUMBNAIL_GET_URL = "https://www.googleapis.com/youtube/v3/videos?key=AIzaSyDEBonEwRKGBCXdaSEn-M9z_yW17GuQUL8&part=snippet&id=" + video_id;
-            HttpClient httpClient = new DefaultHttpClient();
-            HttpGet httpGet = new HttpGet(THUMBNAIL_GET_URL);
-            Log.e("URL", THUMBNAIL_GET_URL);
-            try {
-                HttpResponse response = httpClient.execute(httpGet);
-                HttpEntity httpEntity = response.getEntity();
-                String json = EntityUtils.toString(httpEntity);
-                return json;
-            } catch (IOException e) {
-                e.printStackTrace();
+
+            if (mListData.get(num).getVideo_kind().equals("TWITCH")) {
+                String THUMBNAIL_GET_URL = "https://api.twitch.tv/kraken/videos/" + mListData.get(num).getVideo_id() + "?client_id=ikngsfikq2ke5ub9hw5203pjekqp69";
+                HttpClient httpClient = new DefaultHttpClient();
+                HttpGet httpGet = new HttpGet(THUMBNAIL_GET_URL);
+                Log.e("URL", THUMBNAIL_GET_URL);
+                try {
+                    HttpResponse response = httpClient.execute(httpGet);
+                    HttpEntity httpEntity = response.getEntity();
+                    String json = EntityUtils.toString(httpEntity);
+                    return json;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
             return null;
         }
@@ -166,74 +140,28 @@ public class PlayListFragment extends Fragment {
         protected void onPostExecute(String response) {
             super.onPostExecute(response);
 
-            /*if (response != null) {
+            YoutubeDataModel youtubeDataModel = new YoutubeDataModel();
+            youtubeDataModel.setTitle(mListData.get(requestNum).getTitle());
+            youtubeDataModel.setThumbnail(mListData.get(requestNum).getThumbnail());
+            youtubeDataModel.setVideo_id(mListData.get(requestNum).getVideo_id());
+            youtubeDataModel.setVideo_kind(mListData.get(requestNum).getVideo_kind());
+
+            if (response != null) {
                 try {
                     JSONObject jsonObject = new JSONObject(response);
-                    Log.e("response", jsonObject.toString());
-                    JSONArray jsonArray = jsonObject.getJSONArray("items");
-                    JSONObject json = jsonArray.getJSONObject(0);
-                    JSONObject jsonSnippet = json.getJSONObject("snippet");
-                    String thumbnail = jsonSnippet.getJSONObject("thumbnails").getJSONObject("high").getString("url");
-                    //String thumbnail = "https://i.ytimg.com/vi/dn9g1v4Sht0/hqdefault.jpg";
-
-                    YoutubeDataModel youtubeObject = new YoutubeDataModel();
-                    youtubeObject.setTitle(cateName);
-                    youtubeObject.setThumbnail(thumbnail);
-                    youtubeObject.setVideo_id(video_id);
-                    mListData.add(youtubeObject);
-
-                    initList(mListData);
+                    String thumbnail = jsonObject.getJSONObject("thumbnails").getJSONArray("large").getJSONObject(0).getString("url");
+                    youtubeDataModel.setThumbnail(thumbnail);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-
-            }*/
-            try {
-                //intent로 값을 가져옵니다 이때 JSONObject타입으로 가져옵니다
-                JSONObject jsonObject = new JSONObject(mainActivity.channel);
-
-                //List.php 웹페이지에서 response라는 변수명으로 JSON 배열을 만들었음..
-                JSONArray jsonArray = jsonObject.getJSONArray("response");
-                int count = 0;
-
-                while (count < jsonArray.length()) {
-
-                    JSONObject object = jsonArray.getJSONObject(count);
-
-                    YoutubeDataModel youtubeObject = new YoutubeDataModel();
-
-
-                    cateName = object.getString("title");
-                    cateDetail = object.getString("url");
-                    video_id = cateDetail.substring(cateDetail.indexOf("=") + 1);
-                    String thumbnail = "https://i.ytimg.com/vi/" + video_id + "/hqdefault.jpg";
-                    youtubeObject.setTitle(cateName);
-                    youtubeObject.setThumbnail(thumbnail);
-                    youtubeObject.setVideo_id(video_id);
-
-                    count++;
-                    mListData.add(youtubeObject);
-
-                }
-            } catch (
-                    Exception e) {
-                e.printStackTrace();
             }
 
-
-
-            //API 키 만료됐을 때
-
-
-
-
-            initList(mListData);
+            nListData.add(youtubeDataModel);
+            initList(nListData);
+            requestNum++;
         }
 
     }
-
-
-
 
 
     //create an asynctask to get all the data from youtube

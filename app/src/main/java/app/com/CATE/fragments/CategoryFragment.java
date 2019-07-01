@@ -9,8 +9,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -26,6 +28,7 @@ import java.util.List;
 import app.com.CATE.MainActivity;
 import app.com.CATE.adapters.CategoryAdapter;
 import app.com.CATE.models.CategoryModel;
+import app.com.CATE.models.YoutubeDataModel;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -43,9 +46,9 @@ public class CategoryFragment extends ListFragment {
                              Bundle savedInstanceState) {
         // Adapter 생성 및 Adapter 지정.
         adapter = new CategoryAdapter();
-        mainActivity = (MainActivity)getActivity();
-        setListAdapter(adapter) ;
-        categoryList=new ArrayList<CategoryModel>();
+        mainActivity = (MainActivity) getActivity();
+        setListAdapter(adapter);
+        categoryList = new ArrayList<CategoryModel>();
 //        adapter.addItem("1",
 //                "음악" , "인기트랙 - 한국", "PLFgquLnL59alGJcdc0BEZJb2p7IgkL0Oe") ;
 //        adapter.addItem("2",
@@ -61,7 +64,7 @@ public class CategoryFragment extends ListFragment {
 //        adapter.addItem(ContextCompat.getDrawable(getActivity(), R.drawable.icon_action_rollplaying_game),
 //                "액션 롤플레잉 게임", "예고편", "PLHRoF1XPhCHXQhWkViQveuVa-k6P8_aD2") ;
 
-        try{
+        try {
             //intent로 값을 가져옵니다 이때 JSONObject타입으로 가져옵니다
             JSONObject jsonObject = new JSONObject(mainActivity.category);
 
@@ -73,7 +76,7 @@ public class CategoryFragment extends ListFragment {
             String cateId, cateName, cateDetail, cateKey;
 
             //JSON 배열 길이만큼 반복문을 실행
-            while(count < jsonArray.length()){
+            while (count < jsonArray.length()) {
                 //count는 배열의 인덱스를 의미
                 JSONObject object = jsonArray.getJSONObject(count);
 
@@ -85,12 +88,12 @@ public class CategoryFragment extends ListFragment {
                 //값들을 User클래스에 묶어줍니다
                 CategoryModel CategoryModel = new CategoryModel(cateId, cateName, cateDetail, cateKey);
                 categoryList.add(CategoryModel);//리스트뷰에 값을 추가해줍니다
-                adapter.addItem(cateId,cateName,cateDetail,cateKey);
+                adapter.addItem(cateId, cateName, cateDetail, cateKey);
                 count++;
             }
 
 
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -100,24 +103,23 @@ public class CategoryFragment extends ListFragment {
 
     //아이템 클릭 이벤트
     @Override
-    public void onListItemClick (ListView l, View v, int position, long id) {
+    public void onListItemClick(ListView l, View v, int position, long id) {
         // get TextView's Text.
-        CategoryModel item = (CategoryModel) l.getItemAtPosition(position) ;
+        CategoryModel item = (CategoryModel) l.getItemAtPosition(position);
         new PcOfSeat().execute(item.getDetail());
 
         mainActivity.PLAYLIST_ID = item.getKey();
-        String titleStr = item.getName() ;
-        String descStr = item.getDetail() ;
-        String iconDrawable = item.getId() ;
-        String channelStr = item.getKey() ;
+        String titleStr = item.getName();
+        String descStr = item.getDetail();
+        String iconDrawable = item.getId();
+        String channelStr = item.getKey();
 
         // TODO : use item data.
     }
 
     public void addItem(String icon, String title, String desc, String channel) {
-        adapter.addItem(icon, title, desc, channel) ;
+        adapter.addItem(icon, title, desc, channel);
     }
-
 
 
     public class PcOfSeat extends AsyncTask<String, Void, String> {
@@ -183,8 +185,51 @@ public class CategoryFragment extends ListFragment {
 
         @Override
         protected void onPostExecute(String result) {
-        //    Toast.makeText(mainActivity, result, Toast.LENGTH_SHORT).show();
-            mainActivity.channel=result;
+            //    Toast.makeText(mainActivity, result, Toast.LENGTH_SHORT).show();
+            mainActivity.channel = result;
+
+            try {
+                ArrayList<YoutubeDataModel> listData = new ArrayList<>();
+                JSONObject jsonObject = new JSONObject(result);
+
+                JSONArray jsonArray = jsonObject.getJSONArray("response");
+                int count = 0;
+
+                while (count < jsonArray.length()) {
+
+                    JSONObject object = jsonArray.getJSONObject(count);
+
+                    YoutubeDataModel youtubeObject = new YoutubeDataModel();
+                    String thumbnail = "";
+                    String video_id = "";
+                    String cateName, video_kind, cateDetail;
+
+                    cateName = object.getString("title");
+                    video_kind = object.getString("kind");
+                    cateDetail = object.getString("url");
+
+                    if (video_kind.equals("YOUTUBE")) {
+                        video_id = cateDetail.substring(cateDetail.indexOf("=") + 1);
+                        thumbnail = "https://i.ytimg.com/vi/" + video_id + "/hqdefault.jpg";
+                    }
+                    if (video_kind.equals("TWITCH")) {
+                        String[] split = cateDetail.split("/");
+                        video_id = split[4];
+                        thumbnail = "https://static-cdn.jtvnw.net/jtv_user_pictures/twitch-profile_image-8a8c5be2e3b64a9a-300x300.png";
+                    }
+
+                    youtubeObject.setTitle(cateName);
+                    youtubeObject.setThumbnail(thumbnail);
+                    youtubeObject.setVideo_id(video_id);
+                    youtubeObject.setVideo_kind(video_kind);
+
+                    count++;
+                    listData.add(youtubeObject);
+                }
+                mainActivity.listData = listData;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
 

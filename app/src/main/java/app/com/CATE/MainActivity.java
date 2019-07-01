@@ -13,6 +13,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
+import app.com.CATE.models.YoutubeDataModel;
 import app.com.youtubeapiv3.R;
 
 public class MainActivity extends AppCompatActivity {
@@ -23,6 +26,8 @@ public class MainActivity extends AppCompatActivity {
     private Toolbar toolbar = null;
     public String category,channel;
     TextView txtResult;
+    public ArrayList<YoutubeDataModel> listData = new ArrayList<>();
+
     public String GOOGLE_YOUTUBE_API_KEY = "AIzaSyDDNXQW5vUsBy91h_swoSAc_uFFAG14Clo";  //here you should use your api key for testing purpose you can use this api also
     public String CHANNEL_ID = "UCEgdi0XIXXZ-qJOFPf4JSKw";  //here you should use your channel id for testing purpose you can use this api also
     public String CHANNLE_GET_URL = "https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&channelId=" + CHANNEL_ID + "&eventType=live&maxResults=20&key=" + GOOGLE_YOUTUBE_API_KEY + "";
