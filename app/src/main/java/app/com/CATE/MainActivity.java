@@ -12,6 +12,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -19,12 +20,12 @@ import app.com.CATE.models.YoutubeDataModel;
 import app.com.youtubeapiv3.R;
 
 public class MainActivity extends AppCompatActivity {
-    String strId;
-    public static String  AAA;
+    public String strId;
+    public static String AAA;
     private TabLayout tabLayout = null;
     private ViewPager viewPager = null;
     private Toolbar toolbar = null;
-    public String category,channel;
+    public String category, channel;
     TextView txtResult;
     public ArrayList<YoutubeDataModel> listData = new ArrayList<>();
 
@@ -38,11 +39,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Intent intent=getIntent();
-        category=intent.getStringExtra("Category");
-
+        Intent intent = getIntent();
+        category = intent.getStringExtra("Category");
         strId = intent.getStringExtra("userID");
-        AAA=strId;
+        AAA = strId;
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.addTab(tabLayout.newTab().setText("Category"));
 
         //setup the view pager
-        final PagerAdapter adapter = new app.com.CATE.adapters.PagerAdapter(getSupportFragmentManager(),tabLayout.getTabCount());
+        final PagerAdapter adapter = new app.com.CATE.adapters.PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount());
         viewPager.setAdapter(adapter);
         viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
 
@@ -80,10 +80,6 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-
-
-
-
     }
 
 
@@ -96,20 +92,20 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // 클릭된 메뉴 아이템의 아이디 마다 switch 구절로 클릭시 동작을 설정한다.
-        switch(item.getItemId()){
-            case android.R.id.home :    // 검색 버튼
-                Snackbar.make(toolbar,"Menu pressed",Snackbar.LENGTH_SHORT).show();
+        switch (item.getItemId()) {
+            case android.R.id.home:    // 검색 버튼
+                Snackbar.make(toolbar, "Menu pressed", Snackbar.LENGTH_SHORT).show();
                 return true;
-            case R.id.menu_add : // 추가 버튼
-                Snackbar.make(toolbar,"Search menu pressed",Snackbar.LENGTH_SHORT).show();
+            case R.id.menu_add: // 추가 버튼
+                Snackbar.make(toolbar, "Search menu pressed", Snackbar.LENGTH_SHORT).show();
                 AddDialog dialog = new AddDialog(this);
                 dialog.show();
                 return true;
-            case R.id.menu_account : // 계정 버튼
-                Snackbar.make(toolbar,"Account menu pressed",Snackbar.LENGTH_SHORT).show();
+            case R.id.menu_account: // 계정 버튼
+                Snackbar.make(toolbar, "Account menu pressed", Snackbar.LENGTH_SHORT).show();
                 return true;
-            case R.id.menu_logout :// 로그아웃 버튼
-                Snackbar.make(toolbar,"Logout menu pressed",Snackbar.LENGTH_SHORT).show();
+            case R.id.menu_logout:// 로그아웃 버튼
+                Snackbar.make(toolbar, "Logout menu pressed", Snackbar.LENGTH_SHORT).show();
                 Intent intent = new Intent(MainActivity.this, LoginActivity.class);
                 startActivity(intent);
                 finish();
@@ -122,8 +118,8 @@ public class MainActivity extends AppCompatActivity {
     //팝업 엑티비티 종료
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode==1){
-            if(resultCode==RESULT_OK){
+        if (requestCode == 1) {
+            if (resultCode == RESULT_OK) {
                 //데이터 받기
                 String result = data.getStringExtra("result");
                 txtResult.setText(result);

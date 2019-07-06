@@ -3,8 +3,9 @@
     package="app.com.youtubeapiv3">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -19,11 +20,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="app.com.CATE.DetailsActivity" />
+        <activity
+            android:name="app.com.CATE.DetailsActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize" />
         <activity android:name="app.com.CATE.SignupPage" />
         <activity android:name="app.com.CATE.MainActivity" />
-        <activity android:name="app.com.CATE.TwitchActivity" />
-
+        <activity
+            android:name="app.com.CATE.TwitchActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize" />
     </application>
 
 </manifest>

@@ -50,6 +50,7 @@ public class PlayListFragment extends Fragment {
     private ArrayList<YoutubeDataModel> nListData = new ArrayList<>();
     String cateName, cateDetail, video_id, video_kind;
     int requestNum = 0;
+    String userID;
 
     public MainActivity mainActivity;
 
@@ -67,6 +68,8 @@ public class PlayListFragment extends Fragment {
         mList_videos = (RecyclerView) view.findViewById(R.id.mList_videos);
         mListData = mainActivity.listData;
         initList(nListData);
+
+        userID = mainActivity.strId;
 
         if (!mListData.isEmpty()) {
             for (int i = 0; i < mListData.size(); i++) {
@@ -88,17 +91,20 @@ public class PlayListFragment extends Fragment {
                 if (youtubeDataModel.getVideo_kind().equals("YOUTUBE")) {                                //유튜브 플레이어
                     Intent intent = new Intent(getActivity(), DetailsActivity.class);
                     intent.putExtra(YoutubeDataModel.class.toString(), youtubeDataModel);
+                    intent.putExtra("userID", userID);
+                    intent.putExtra("video_index", youtubeDataModel.getVideo_index());
                     startActivity(intent);
                 }
                 if (youtubeDataModel.getVideo_kind().equals("TWITCH")) {
                     Intent intent = new Intent(getActivity(), TwitchActivity.class);                   //트위치 플레이어
                     intent.putExtra(YoutubeDataModel.class.toString(), youtubeDataModel);
+                    intent.putExtra("userID", userID);
+                    intent.putExtra("video_index", youtubeDataModel.getVideo_index());
                     startActivity(intent);
                 }
             }
         });
         mList_videos.setAdapter(adapter);
-
     }
 
 
@@ -106,7 +112,7 @@ public class PlayListFragment extends Fragment {
     class RequestVideoThumbnail extends AsyncTask<Void, String, String> {
         int num;
 
-        RequestVideoThumbnail(int num){
+        RequestVideoThumbnail(int num) {
             this.num = num;
         }
 
@@ -145,6 +151,7 @@ public class PlayListFragment extends Fragment {
             youtubeDataModel.setThumbnail(mListData.get(requestNum).getThumbnail());
             youtubeDataModel.setVideo_id(mListData.get(requestNum).getVideo_id());
             youtubeDataModel.setVideo_kind(mListData.get(requestNum).getVideo_kind());
+            youtubeDataModel.setVideo_index(mListData.get(requestNum).getVideo_index());
 
             if (response != null) {
                 try {

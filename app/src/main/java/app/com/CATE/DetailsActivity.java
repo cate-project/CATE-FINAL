@@ -15,8 +15,14 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.toolbox.Volley;
 import com.google.android.youtube.player.YouTubeBaseActivity;
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
@@ -41,8 +47,12 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 
+import app.com.CATE.adapters.Comment1Adapter;
+import app.com.CATE.models.CommentModel;
 import app.com.CATE.models.YoutubeCommentModel;
 import app.com.CATE.models.YoutubeDataModel;
+import app.com.CATE.requests.CommentInsertRequest;
+import app.com.CATE.requests.CommentRequest;
 import app.com.youtubeapiv3.R;
 import app.com.CATE.adapters.CommentAdapter;
 import at.huber.youtubeExtractor.YouTubeUriExtractor;
@@ -53,8 +63,8 @@ public class DetailsActivity extends YouTubeBaseActivity implements YouTubePlaye
     private static String GOOGLE_YOUTUBE_API = "AIzaSyBH8szUCt1ctKQabVeQuvWgowaKxHVjn8E";
     private YoutubeDataModel youtubeDataModel = null;
     TextView textViewName;
-    TextView textViewDes;
-    TextView textViewDate;
+//    TextView textViewDes;
+//    TextView textViewDate;
     // ImageView imageViewIcon;
     public static final String VIDEO_ID = "c2UNv38V6y4";
     private YouTubePlayerView mYoutubePlayerView = null;
@@ -62,7 +72,9 @@ public class DetailsActivity extends YouTubeBaseActivity implements YouTubePlaye
     private ArrayList<YoutubeCommentModel> mListData = new ArrayList<>();
     private CommentAdapter mAdapter = null;
     private RecyclerView mList_videos = null;
-
+    ListView listview;
+    int size, video_index;
+    String userID = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,21 +82,26 @@ public class DetailsActivity extends YouTubeBaseActivity implements YouTubePlaye
         setContentView(R.layout.activity_details);
         youtubeDataModel = getIntent().getParcelableExtra(YoutubeDataModel.class.toString());
         Log.e("", youtubeDataModel.getDescription());
+        Intent intent = getIntent();
+        userID = intent.getStringExtra("userID");
+        video_index = intent.getIntExtra("video_index", 0);
 
         mYoutubePlayerView = (YouTubePlayerView) findViewById(R.id.youtube_player);
         mYoutubePlayerView.initialize(GOOGLE_YOUTUBE_API, this);
 
         textViewName = (TextView) findViewById(R.id.textViewName);
-        textViewDes = (TextView) findViewById(R.id.textViewDes);
-        // imageViewIcon = (ImageView) findViewById(R.id.imageView);
-        textViewDate = (TextView) findViewById(R.id.textViewDate);
+//        textViewDes = (TextView) findViewById(R.id.textViewDes);
+//        imageViewIcon = (ImageView) findViewById(R.id.imageView);
+//        textViewDate = (TextView) findViewById(R.id.textViewDate);
 
         textViewName.setText(youtubeDataModel.getTitle());
-        textViewDes.setText(youtubeDataModel.getDescription());
-        textViewDate.setText(youtubeDataModel.getPublishedAt());
+//        textViewDes.setText(youtubeDataModel.getDescription());
+//        textViewDate.setText(youtubeDataModel.getPublishedAt());
 
         mList_videos = (RecyclerView) findViewById(R.id.mList_videos);
-        new RequestYoutubeCommentAPI().execute();
+        listview = (ListView) findViewById(R.id.commentList);
+
+//        new RequestYoutubeCommentAPI().execute();
 //        try {
 //            if (youtubeDataModel.getThumbnail() != null) {
 //                if (youtubeDataModel.getThumbnail().startsWith("http")) {
@@ -105,6 +122,79 @@ public class DetailsActivity extends YouTubeBaseActivity implements YouTubePlaye
             }
         }
 
+        //댓글 기능
+        Comment1Adapter adapter = new Comment1Adapter();
+        listview.setAdapter(adapter);
+
+        final EditText descText = (EditText) findViewById(R.id.descText);
+        Button insertButton = (Button) findViewById(R.id.insertButton);
+
+        final Response.Listener<String> responseListener = new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    ArrayList<CommentModel> cListData = new ArrayList<>();
+                    JSONArray jsonArray = new JSONArray(response);
+                    for(int i=0; i<jsonArray.length(); i++) {
+                        JSONObject commentObject = jsonArray.getJSONObject(i);
+                        String author = commentObject.getString("author");
+                        String desc = commentObject.getString("desc");
+
+                        CommentModel commentModel = new CommentModel(author, desc);
+                        cListData.add(commentModel);
+                    }
+                    if(cListData.isEmpty()) size = 0;
+                    else size = cListData.size();
+
+                    Comment1Adapter adapter = new Comment1Adapter(cListData);
+                    listview.setAdapter(adapter);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        final CommentRequest commentRequest = new CommentRequest(video_index, responseListener);
+        RequestQueue queue = Volley.newRequestQueue(DetailsActivity.this);
+        queue.add(commentRequest);
+
+        insertButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                String author = "test";
+                String desc = descText.getText().toString();
+
+                final Response.Listener<String> responseListener1 = new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            ArrayList<CommentModel> cListData = new ArrayList<>();
+                            JSONArray jsonArray = new JSONArray(response);
+                            for(int i=0; i<jsonArray.length(); i++) {
+                                JSONObject commentObject = jsonArray.getJSONObject(i);
+                                String author = commentObject.getString("author");
+                                String desc = commentObject.getString("desc");
+
+                                CommentModel commentModel = new CommentModel(author, desc);
+                                cListData.add(commentModel);
+                            }
+                            if(cListData.isEmpty()) size = 0;
+                            else size = cListData.size();
+
+                            Comment1Adapter adapter = new Comment1Adapter(cListData);
+                            listview.setAdapter(adapter);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                };
+                CommentInsertRequest commentInsertRequest = new CommentInsertRequest(video_index, size+1, userID, desc, responseListener1);
+                RequestQueue queue = Volley.newRequestQueue(DetailsActivity.this);
+                queue.add(commentInsertRequest);
+
+                descText.setText(null);
+            }
+        });
     }
 
     public void back_btn_pressed(View view) {

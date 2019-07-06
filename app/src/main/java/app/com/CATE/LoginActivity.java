@@ -24,6 +24,7 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import app.com.CATE.requests.LoginRequest;
 import app.com.youtubeapiv3.R;
 
 public class LoginActivity extends AppCompatActivity {
@@ -176,7 +177,5 @@ public class LoginActivity extends AppCompatActivity {
             RequestQueue queue = Volley.newRequestQueue(LoginActivity.this);
             queue.add(loginRequest);
         }
-
-
     }
 }

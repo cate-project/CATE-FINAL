@@ -2,6 +2,7 @@ package app.com.CATE;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -13,18 +14,39 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+
+import app.com.CATE.adapters.Comment1Adapter;
+import app.com.CATE.models.CommentModel;
 import app.com.CATE.models.YoutubeDataModel;
+import app.com.CATE.requests.CommentInsertRequest;
+import app.com.CATE.requests.CommentRequest;
 import app.com.youtubeapiv3.R;
 
 public class TwitchActivity extends AppCompatActivity {
     private YoutubeDataModel youtubeDataModel = null;
     WebView web;
     TextView title;
+    ListView listview;
+    int size, video_index;
+    String userID = "";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -33,9 +55,13 @@ public class TwitchActivity extends AppCompatActivity {
         youtubeDataModel = getIntent().getParcelableExtra(YoutubeDataModel.class.toString());
         String videoId = youtubeDataModel.getVideo_id();
 //        String twitch_URL = "https://www.twitch.tv/videos/442053839";                                           //트위치 URL 예
+        Intent intent = getIntent();
+        userID = intent.getStringExtra("userID");
+        video_index = intent.getIntExtra("video_index", 0);
 
         web = (WebView) findViewById(R.id.twitchPlayer);
         title = (TextView) findViewById(R.id.twichTitle);
+        listview = (ListView) findViewById(R.id.commentList);
 
         web.getSettings().setJavaScriptEnabled(true);
         web.setWebChromeClient(new FullscreenableChromeClient(TwitchActivity.this));                //전체화면
@@ -55,15 +81,89 @@ public class TwitchActivity extends AppCompatActivity {
                 "allowfullscreen=\"true\"\n" +
                 "src=\"https://player.twitch.tv/?autoplay=false&video=v";
         final String html2 = "\"\n" +
-                "height=\"350\"\n" +
+                "height=\"200\"\n" +
                 "width=\"400\">\n" +
                 "</iframe>";
 
 //        String[] split = twitch_URL.split("/");
         web.loadData(html1 + videoId + html2, "text/html", null);
 
-
         title.setText(youtubeDataModel.getTitle());
+
+        //댓글 기능
+        Comment1Adapter adapter = new Comment1Adapter();
+        listview.setAdapter(adapter);
+
+        final EditText descText = (EditText) findViewById(R.id.descText);
+        Button insertButton = (Button) findViewById(R.id.insertButton);
+
+        final Response.Listener<String> responseListener = new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    ArrayList<CommentModel> cListData = new ArrayList<>();
+                    JSONArray jsonArray = new JSONArray(response);
+                    for(int i=0; i<jsonArray.length(); i++) {
+                        JSONObject commentObject = jsonArray.getJSONObject(i);
+                        String author = commentObject.getString("author");
+                        String desc = commentObject.getString("desc");
+
+                        CommentModel commentModel = new CommentModel(author, desc);
+                        cListData.add(commentModel);
+                    }
+                    if(cListData.isEmpty()) size = 0;
+                    else size = cListData.size();
+
+                    Comment1Adapter adapter = new Comment1Adapter(cListData);
+                    listview.setAdapter(adapter);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        final CommentRequest commentRequest = new CommentRequest(video_index, responseListener);
+        RequestQueue queue = Volley.newRequestQueue(TwitchActivity.this);
+        queue.add(commentRequest);
+
+        insertButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                String author = "test";
+                String desc = descText.getText().toString();
+
+                final Response.Listener<String> responseListener1 = new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            ArrayList<CommentModel> cListData = new ArrayList<>();
+                            JSONArray jsonArray = new JSONArray(response);
+                            for(int i=0; i<jsonArray.length(); i++) {
+                                JSONObject commentObject = jsonArray.getJSONObject(i);
+                                String author = commentObject.getString("author");
+                                String desc = commentObject.getString("desc");
+
+                                CommentModel commentModel = new CommentModel(author, desc);
+                                cListData.add(commentModel);
+                            }
+                            if(cListData.isEmpty()) size = 0;
+                            else size = cListData.size();
+
+                            Comment1Adapter adapter = new Comment1Adapter(cListData);
+                            listview.setAdapter(adapter);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                };
+                CommentInsertRequest commentInsertRequest = new CommentInsertRequest(video_index, size+1, userID, desc, responseListener1);
+                RequestQueue queue = Volley.newRequestQueue(TwitchActivity.this);
+                queue.add(commentInsertRequest);
+
+                descText.setText(null);
+            }
+        });
+
     }
 }
 

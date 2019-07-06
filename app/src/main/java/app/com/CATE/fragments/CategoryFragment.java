@@ -203,10 +203,12 @@ public class CategoryFragment extends ListFragment {
                     String thumbnail = "";
                     String video_id = "";
                     String cateName, video_kind, cateDetail;
+                    int video_index;
 
                     cateName = object.getString("title");
                     video_kind = object.getString("kind");
                     cateDetail = object.getString("url");
+                    video_index = Integer.parseInt(object.getString("id"));
 
                     if (video_kind.equals("YOUTUBE")) {
                         video_id = cateDetail.substring(cateDetail.indexOf("=") + 1);
@@ -218,6 +220,7 @@ public class CategoryFragment extends ListFragment {
                         thumbnail = "https://static-cdn.jtvnw.net/jtv_user_pictures/twitch-profile_image-8a8c5be2e3b64a9a-300x300.png";
                     }
 
+                    youtubeObject.setVideo_index(video_index);
                     youtubeObject.setTitle(cateName);
                     youtubeObject.setThumbnail(thumbnail);
                     youtubeObject.setVideo_id(video_id);
