@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="app.com.youtubeapiv3.app.com.CATE.LoginActivity">
+    tools:context="app.com.CATE.LoginActivity">
 
     <EditText
         android:id="@+id/idText"
@@ -49,6 +49,15 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/passwordText" />
 
+    <com.kakao.usermgmt.LoginButton
+
+        android:id="@+id/btn_kakao_login"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/btn_signup"></com.kakao.usermgmt.LoginButton>
     <Button
         android:id="@+id/btn_signup"
         android:layout_width="112dp"
@@ -62,6 +71,17 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/loginbtn" />
+    <Button
+        android:id="@+id/btnLogout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="150dp"
+        android:text="로그아웃"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        />
+
 </android.support.constraint.ConstraintLayout>
 
 
